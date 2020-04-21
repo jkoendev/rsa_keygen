@@ -5,13 +5,14 @@
 
 void run_tests();
 typedef unsigned long long ull_t;
+typedef signed long long sll_t;
 
 
 // find x,y for gcd(a,b)=xa+yb
-void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, ull_t &out_x, ull_t &out_y) {
+void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, sll_t &out_x, sll_t &out_y) {
 
-    assert(a>0);
-    assert(b>0);
+    assert(a>=0);
+    assert(b>=0);
 
     // assert(a>b);
 
@@ -145,7 +146,7 @@ ull_t check_prime(ull_t n, int k=10) {
 ull_t gen_prime(int bit_length, int num_prime_tests=10) {
 
     static std::default_random_engine rng;
-    std::uniform_int_distribution<ull_t> dist(2<<bit_length, (2<<bit_length+1)-1); 
+    std::uniform_int_distribution<ull_t> dist(2<<(bit_length-2), (2<<bit_length-1)-1); 
     ull_t x  = dist(rng) | 1;
 
     while (!check_prime(x, num_prime_tests)) {
@@ -160,7 +161,7 @@ int main() {
 
     int num_prime_tests = 10;
 
-    int k = 8;
+    int k = 32;
     int e = 17; // 65537;
 
     ull_t p;
@@ -176,9 +177,10 @@ int main() {
     ull_t N = p*q;
     ull_t phi = (p-1)*(q-1);
 
-    assert(gcd(e,p-1) == 1);
-    assert(gcd(e,phi) == 1);
-    ull_t gcd, d, y;
+    // assert(gcd(e,p-1) == 1);
+    // assert(gcd(e,phi) == 1);
+    ull_t gcd;
+    sll_t d, y;
     gcd_extended(e,phi,gcd,d,y);
 
     std::cout << N << ", " << e << ", " << d << std::endl;
@@ -237,8 +239,14 @@ void run_tests() {
 
     // gcd_extended
     ull_t out_gcd;
-    ull_t out_x;
-    ull_t out_y;
+    sll_t out_x;
+    sll_t out_y;
+
+    gcd_extended(23, 0, out_gcd, out_x, out_y);
+    assert(out_gcd == 23);
+    assert(out_x == 1);
+    assert(out_y == 0);
+
     gcd_extended(421, 111, out_gcd, out_x, out_y);
     assert(out_gcd == 1);
     assert(out_x == -29);
