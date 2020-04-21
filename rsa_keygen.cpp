@@ -7,7 +7,6 @@ void run_tests();
 typedef unsigned long long ull_t;
 typedef signed long long sll_t;
 
-
 // find x,y for gcd(a,b)=xa+yb
 void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, sll_t &out_x, sll_t &out_y) {
 
@@ -70,19 +69,18 @@ ull_t gcd(ull_t a, ull_t b) {
     return a;
 }
 
-// Calculates a^n % p 
-ull_t power_mod(ull_t a, ull_t n, ull_t p) {
+// Calculates a^b % c 
+ull_t power_mod(ull_t a, ull_t b, ull_t c) {
     
     ull_t res = 1; 
-    a = a % p;   
+    a = a % c;   
   
-    while (n > 0) { 
-        if (n & 1) {
-            res = (res*a) % p;
+    while (b > 0) { 
+        if (b & 1) { 
+            res = (res*a) % c;
         } 
-        n = n>>1; 
-        a = (a*a) % p; 
-        
+        b = b>>1; 
+        a = (a*a) % c;
     } 
     return res; 
 } 
@@ -155,35 +153,62 @@ ull_t gen_prime(int bit_length, int num_prime_tests=10) {
     return x;
 }
 
+void gen_RSA_keys(int k, int e, int num_prime_tests, 
+                    ull_t &out_n, ull_t &out_d) {
+
+    ull_t p;
+    do {
+        p = gen_prime(k/2, num_prime_tests);
+    } while (p%e == 1);
+
+    ull_t q;
+    do {
+        q = gen_prime(k-k/2, num_prime_tests);
+    } while(q%e == 1);
+
+    ull_t n = p*q;
+    ull_t phi = (p-1)*(q-1);
+
+    assert(gcd(e,p-1) == 1);
+    assert(gcd(e,phi) == 1);
+
+    ull_t v;
+    sll_t d, y;
+    gcd_extended(e,phi,v,d,y);
+
+    out_n = n;
+    out_d = d;
+}
+
 int main() {
 
     run_tests();
 
     int num_prime_tests = 10;
 
-    int k = 32;
+    int k = 32; // num bits
     int e = 17; // 65537;
 
-    ull_t p;
-    do {
-        p = gen_prime(k/2, num_prime_tests);
-    } while (p%e != 1);
+    ull_t n, d;
+    gen_RSA_keys(k, e, num_prime_tests, n, d);
 
-    ull_t q;
-    do {
-        q = gen_prime(k-k/2, num_prime_tests);
-    } while(q%e != 1);
+    std::cout << n << ", " << e << ", " << d << std::endl;
 
-    ull_t N = p*q;
-    ull_t phi = (p-1)*(q-1);
 
-    // assert(gcd(e,p-1) == 1);
-    // assert(gcd(e,phi) == 1);
-    ull_t gcd;
-    sll_t d, y;
-    gcd_extended(e,phi,gcd,d,y);
+    // message
+    std::string message = "Hello Nick";
+    std::vector<ull_t> message_encrypted;
+    for (auto m : message) {
+        ull_t c = power_mod(m, e, n);
+        message_encrypted.push_back(c);
+        std::cout << m+0 << " " << c << std::endl;
+    }
 
-    std::cout << N << ", " << e << ", " << d << std::endl;
+    for (auto c : message_encrypted) {
+        ull_t m = power_mod(c, d, n);
+        std::cout << (char) m;
+    }
+    std::cout << std::endl;
 }
 
 void run_tests() {
