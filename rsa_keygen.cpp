@@ -13,6 +13,8 @@ void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, ull_t &out_x, ull_t &out_y) 
     assert(a>0);
     assert(b>0);
 
+    assert(a>b);
+
     if (b==0) {
         out_gcd = a;
         out_x = 1;
@@ -176,8 +178,6 @@ int main() {
     ull_t d = (1/e) % L;
 
     std::cout << N << ", " << L << ", " << d << std::endl;
-
-
 }
 
 void run_tests() {
@@ -235,7 +235,7 @@ void run_tests() {
     ull_t out_gcd;
     ull_t out_x;
     ull_t out_y;
-    gcd_extended(421,111, out_gcd, out_x, out_y);
+    gcd_extended(421, 111, out_gcd, out_x, out_y);
     assert(out_gcd == 1);
     assert(out_x == -29);
     assert(out_y == 110);
