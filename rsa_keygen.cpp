@@ -13,7 +13,7 @@ void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, ull_t &out_x, ull_t &out_y) 
     assert(a>0);
     assert(b>0);
 
-    assert(a>b);
+    // assert(a>b);
 
     if (b==0) {
         out_gcd = a;
@@ -39,7 +39,7 @@ void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, ull_t &out_x, ull_t &out_y) 
         b = r;
         x2 = x1;
         x1 = x;
-        x2 = y1;
+        y2 = y1;
         y1 = y;
     }
 
@@ -160,7 +160,7 @@ int main() {
 
     int num_prime_tests = 10;
 
-    int k = 16;
+    int k = 8;
     int e = 17; // 65537;
 
     ull_t p;
@@ -174,10 +174,14 @@ int main() {
     } while(q%e != 1);
 
     ull_t N = p*q;
-    ull_t L = (p-1)*(q-1);
-    ull_t d = (1/e) % L;
+    ull_t phi = (p-1)*(q-1);
 
-    std::cout << N << ", " << L << ", " << d << std::endl;
+    assert(gcd(e,p-1) == 1);
+    assert(gcd(e,phi) == 1);
+    ull_t gcd, d, y;
+    gcd_extended(e,phi,gcd,d,y);
+
+    std::cout << N << ", " << e << ", " << d << std::endl;
 }
 
 void run_tests() {
@@ -240,5 +244,23 @@ void run_tests() {
     assert(out_x == -29);
     assert(out_y == 110);
 
+    gcd_extended(111, 421, out_gcd, out_x, out_y);
+    assert(out_gcd == 1);
+    assert(out_x == 110);
+    assert(out_y == -29);
 
+    // RSA
+    ull_t p, q, n, e, phi;
+    p = 11;
+    q = 3;
+    n = p*q;
+    e = 3;
+    phi = (p-1)*(q-1);
+
+    assert(gcd(e,p-1) == 1);
+
+    gcd_extended(e, phi, out_gcd, out_x, out_y);
+    assert(out_gcd == 1);
+    assert(out_x == 7);
+    assert((out_x*e-1) % phi == 0);
 }
