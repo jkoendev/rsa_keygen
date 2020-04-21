@@ -195,8 +195,8 @@ int main() {
     std::cout << n << ", " << e << ", " << d << std::endl;
 
 
-    // message
-    std::string message = "Hello Nick";
+    // encrypt message
+    std::string message = "The World Wonders";
     std::vector<ull_t> message_encrypted;
     for (auto m : message) {
         ull_t c = power_mod(m, e, n);
@@ -204,6 +204,7 @@ int main() {
         std::cout << m+0 << " " << c << std::endl;
     }
 
+    // decrypt message
     for (auto c : message_encrypted) {
         ull_t m = power_mod(c, d, n);
         std::cout << (char) m;
