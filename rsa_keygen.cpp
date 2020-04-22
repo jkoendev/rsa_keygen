@@ -2,13 +2,14 @@
 #include <cmath>
 #include <cassert>
 #include <iostream>
+#include <tuple>
 
 void run_tests();
 typedef unsigned long long ull_t;
 typedef signed long long sll_t;
 
-// find x,y for gcd(a,b)=xa+yb
-void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, sll_t &out_x, sll_t &out_y) {
+// find d,x,y for d = gcd(a,b) = xa+yb
+std::tuple<ull_t, sll_t, sll_t> gcd_extended(ull_t a, ull_t b) {
 
     assert(a>=0);
     assert(b>=0);
@@ -16,10 +17,7 @@ void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, sll_t &out_x, sll_t &out_y) 
     // assert(a>b);
 
     if (b==0) {
-        out_gcd = a;
-        out_x = 1;
-        out_y = 0;
-        return;
+        return std::make_tuple(a, 1, 0);
     }
 
     ull_t x1 = 0;
@@ -41,13 +39,11 @@ void gcd_extended(ull_t a, ull_t b, ull_t &out_gcd, sll_t &out_x, sll_t &out_y) 
         x1 = x;
         y2 = y1;
         y1 = y;
-    }
+    }   
 
-    out_gcd = a;
-    out_x = x2;
-    out_y = y2;
-
-    assert(a==1);
+    assert(a==1); 
+    
+    return std::make_tuple(a,x2,y2);
 }
 
 
@@ -153,8 +149,7 @@ ull_t gen_prime(int bit_length, int num_prime_tests=10) {
     return x;
 }
 
-void gen_RSA_keys(int k, int e, int num_prime_tests, 
-                    ull_t &out_n, ull_t &out_d) {
+std::tuple<ull_t, ull_t> rsa_keygen(int k, int e, int num_prime_tests) {
 
     ull_t p;
     do {
@@ -172,12 +167,20 @@ void gen_RSA_keys(int k, int e, int num_prime_tests,
     assert(gcd(e,p-1) == 1);
     assert(gcd(e,phi) == 1);
 
-    ull_t v;
-    sll_t d, y;
-    gcd_extended(e,phi,v,d,y);
+    auto [v, d, y] = gcd_extended(e,phi);
 
-    out_n = n;
-    out_d = d;
+    return std::make_tuple(n,d);
+}
+
+std::vector<ull_t> rsa_encrypt(std::string message, int k=32, int e=17, int num_prime_tests=10) {
+
+    auto [n, d] = rsa_keygen(k, e, num_prime_tests);
+
+    std::vector<ull_t> message_encrypted;
+    for (auto m : message) {
+        ull_t c = power_mod(m, e, n);
+        message_encrypted.push_back(c);
+    }
 }
 
 int main() {
@@ -189,11 +192,7 @@ int main() {
     int k = 32; // num bits
     int e = 17; // 65537;
 
-    ull_t n, d;
-    gen_RSA_keys(k, e, num_prime_tests, n, d);
-
-    std::cout << n << ", " << e << ", " << d << std::endl;
-
+    auto [n, d] = rsa_keygen(k, e, num_prime_tests);
 
     // encrypt message
     std::string message = "The World Wonders";
@@ -201,13 +200,20 @@ int main() {
     for (auto m : message) {
         ull_t c = power_mod(m, e, n);
         message_encrypted.push_back(c);
-        std::cout << m+0 << " " << c << std::endl;
     }
 
     // decrypt message
+    std::vector<char> message_decrypted;
     for (auto c : message_encrypted) {
         ull_t m = power_mod(c, d, n);
-        std::cout << (char) m;
+        message_decrypted.push_back(m);
+    }
+
+    std::cout << "n, e, d: ";
+    std::cout << n << ", " << e << ", " << d << std::endl;
+
+    for (auto c: message_decrypted) {
+        std::cout << c << " ";
     }
     std::cout << std::endl;
 }
@@ -264,26 +270,29 @@ void run_tests() {
     assert(gcd(219,93) == 3);
 
     // gcd_extended
-    ull_t out_gcd;
-    sll_t out_x;
-    sll_t out_y;
+    {
+    auto [d,x,y] = gcd_extended(23, 0);
+    assert(d == 23);
+    assert(x == 1);
+    assert(y == 0);
+    }
 
-    gcd_extended(23, 0, out_gcd, out_x, out_y);
-    assert(out_gcd == 23);
-    assert(out_x == 1);
-    assert(out_y == 0);
+    {
+    auto [d,x,y] = gcd_extended(421, 111);
+    assert(d == 1);
+    assert(x == -29);
+    assert(y == 110);
+    }
 
-    gcd_extended(421, 111, out_gcd, out_x, out_y);
-    assert(out_gcd == 1);
-    assert(out_x == -29);
-    assert(out_y == 110);
-
-    gcd_extended(111, 421, out_gcd, out_x, out_y);
-    assert(out_gcd == 1);
-    assert(out_x == 110);
-    assert(out_y == -29);
+    {
+    auto [d,x,y] = gcd_extended(111, 421);
+    assert(d == 1);
+    assert(x == 110);
+    assert(y == -29);
+    }
 
     // RSA
+    {
     ull_t p, q, n, e, phi;
     p = 11;
     q = 3;
@@ -293,8 +302,9 @@ void run_tests() {
 
     assert(gcd(e,p-1) == 1);
 
-    gcd_extended(e, phi, out_gcd, out_x, out_y);
-    assert(out_gcd == 1);
-    assert(out_x == 7);
-    assert((out_x*e-1) % phi == 0);
+    auto [d,x,y] = gcd_extended(e, phi);
+    assert(d == 1);
+    assert(x == 7);
+    assert((x*e-1) % phi == 0);
+    }
 }
