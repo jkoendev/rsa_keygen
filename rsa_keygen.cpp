@@ -137,10 +137,11 @@ ull_t check_prime(ull_t n, int k=10) {
     return true;
 }
 
-ull_t gen_prime(int bit_length, int num_prime_tests=10) {
+// bitlength k
+ull_t gen_prime(int k, int num_prime_tests=10) {
 
     static std::default_random_engine rng;
-    std::uniform_int_distribution<ull_t> dist(2<<(bit_length-2), (2<<bit_length-1)-1); 
+    std::uniform_int_distribution<ull_t> dist(2<<(k-2), (2<<k-1)-1); 
     ull_t x  = dist(rng) | 1;
 
     while (!check_prime(x, num_prime_tests)) {
@@ -149,6 +150,8 @@ ull_t gen_prime(int bit_length, int num_prime_tests=10) {
     return x;
 }
 
+// bitlength k
+// base e
 std::tuple<ull_t, ull_t> rsa_keygen(int k, int e, int num_prime_tests) {
 
     ull_t p;
